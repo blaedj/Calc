@@ -14,43 +14,55 @@ class ViewController: UIViewController {
    
     var appendToDisplay = false
     var operandStack = Array<Double>()
-    var operatorStack = Array<Operator>()
    
     @IBAction func digitInput(sender: UIButton) {
         let digit = sender.currentTitle!
-        updateDisplay(digit)
-        appendToDisplay = true
+        if appendToDisplay {
+            calcDisplay.text = calcDisplay.text! + digit
+        } else {
+            calcDisplay.text = digit
+            appendToDisplay = true
+        }
     }
     
     
     @IBAction func enterPressed() {
         appendToDisplay = false
         operandStack.append(displayValue)
-        print(operandStack)
+        print("stack: \(operandStack)")
     }
 
-    func calculate() -> Double? {
-        appendToDisplay = false
-        if let lastOperator = operatorStack.popLast() {
-            let val = lastOperator.perform(operandStack.popLast()!, secondOperand: operandStack.popLast()!)
-            return val
-        }
-        return 0.0
-    }
-
-    @IBAction func addPressed() {
-        operatorStack.append(Adder())
-        let result = calculate()!
-        updateDisplay("\(result)")
-        operandStack.append(result)
-    }
-
-    func updateDisplay(message: String){
+    func calculate(operation: (Double, Double) -> Double) {
         if appendToDisplay {
-            calcDisplay.text = calcDisplay.text! + message
-        } else {
-            calcDisplay.text = message
+            enterPressed()
         }
+        var firstOperand = 0.0
+        if operandStack.count >= 1 {
+            firstOperand = operandStack.popLast()!
+        }
+        if let secondOperand = operandStack.popLast() {
+            displayValue = operation(firstOperand, secondOperand)
+        } else {
+            displayValue = operation(0.0, firstOperand)
+        }
+        enterPressed()
+        print("stack: \(operandStack)")
+    }
+
+    
+    @IBAction func operate(sender: UIButton) {
+        let operation = sender.currentTitle!
+        switch operation {
+        case "+": calculate { $0 + $1 }
+        case "−": calculate { $1 - $0 }
+        case "÷": calculate { $1 / $0  }
+        case "×": calculate { $0 * $1 }
+        default: break
+        }
+    }
+    
+    
+    func updateDisplay(message: String){
     }
 
     var displayValue: Double {
